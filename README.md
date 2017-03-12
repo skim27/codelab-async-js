@@ -578,13 +578,16 @@ so that the generator can work off of only synchronous values. Makes a lot more 
 
 ```javascript
 co(function* () {
-  var user = yield fetch('/api/user/self');
-  var interests = yield fetch('/api/user/interests?userId=' + self.id);
+  var user = yield fetchJson('/api/user/self');
+  var interests = yield fetchJson('/api/user/interests?userId=' + self.id);
   var recommendations = yield Promise.all(
-      interests.map(i => fetch('/api/recommendations?topic=' + i)));
+      interests.map(i => fetchJson('/api/recommendations?topic=' + i)));
   render(user, interests, recommendations);
 });
 ```
+
+For those who are familiar with [trampoline functions](https://en.wikipedia.org/wiki/Trampoline_(computing)),
+`co()` can be thought of as the asynchronous version of a trampoline function, that trampolines Promises.
 
 ### Coding challenge - `co()` simple
 
