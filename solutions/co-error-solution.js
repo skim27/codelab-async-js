@@ -7,13 +7,13 @@ function deferReject(e) {
 }
 
 co(function* asyncAdds() {
-  console.log(yield deferred(1));
+  console.log(yield deferred('We are starting!'));
   try {
-    console.log(yield deferredError(new Error('To fail, or to not fail.')));
+    console.log(yield deferReject(new Error('To fail, or to not fail.')));
   } catch (e) {
     console.log('We recovered!');
   }
-  console.log(yield deferred(3));
+  console.log(yield deferred('We finished!'));
 });
 
 
@@ -28,6 +28,7 @@ function co(generator) {
         ret = g.next(value);
       } catch (e) {
         reject(e)
+        return;
       }
       next(ret);
     }
@@ -39,6 +40,7 @@ function co(generator) {
         ret = g.throw(err);
       } catch (e) {
         reject(e);
+        return;
       }
       next(ret);
     }

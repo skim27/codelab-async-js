@@ -587,14 +587,19 @@ co(function* () {
 
 ### Coding challenge - `co()` simple
 
-Great! Now let's build `co()` ourselves and build up some intuition on how exactly this slave
+Great! Now let's build `co()` ourselves to build up some intuition on how exactly this slave
 routine works. `co()` must
 
-- Return a Promise for the caller to wait on
-- Instantiate the generator
-- Continuously call `.next()` to get new values
-- If it gets a Promise, it must wait for it to complete and pass the resolved value to the generator
-- If it's not a Promise, it will assume the generator made a mistake and pass it back.
+1. Return a Promise for the caller to wait on
+2. Instantiate the generator
+3. Call .next() on the generator to get the first yielded result, which should be of the form
+   `{done: false, value: [a Promise]}`
+4. Register a callback on the Promise
+5. When the promise resolves (the callback is called), call .next() on the generator with the
+   resolved value, and get another value back
+6. Repeat from step 4
+7. If at any time the generator returns a `{done: true, value: ...}`, resolve the promise returned
+   by `co()`
 
 Let's not worry about errors for now, and build a simple `co()` method that can handle the contrived
 example below:

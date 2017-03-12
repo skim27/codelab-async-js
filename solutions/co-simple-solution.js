@@ -3,9 +3,12 @@ function deferred(val) {
 }
 
 co(function* asyncAdds() {
-  console.log(yield deferred(1));
-  console.log(yield deferred(2));
-  console.log(yield deferred(3));
+  console.log(yield deferred(1)); // 1
+  console.log(yield deferred(2)); // 2
+  console.log(yield deferred(3)); // 3
+  return 4;
+}).then(function (result) {
+  console.log(result); // 4
 });
 
 function co(generator) {
