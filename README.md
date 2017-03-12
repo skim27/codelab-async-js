@@ -61,16 +61,16 @@ Not too shabby eh?
 But wait!! Let's look at a more practical (but still very contrived) example of callbacks:
 
 ```javascript
-// Suppose that we have a method fetch() that does GET requests and has an interface that looks like
-// this, where callback is expected to take error as its first argument and the parsed response data
-// as its second.
-function fetch(url, callback) { ... }
+// Suppose that we have a method fetchJson() that does GET requests and has an interface that looks
+// like this, where callback is expected to take error as its first argument and the parsed response
+// data as its second.
+function fetchJson(url, callback) { ... }
 
-fetch('/api/user/self', function(e, user) {
-  fetch('/api/interests?userId=' + user.id, function(e, interests) {
+fetchJson('/api/user/self', function(e, user) {
+  fetchJson('/api/interests?userId=' + user.id, function(e, interests) {
     var recommendations = [];
     interests.forEach(function () {
-      fetch('/api/recommendations?topic=' + interest, function(e, recommendation) {
+      fetchJson('/api/recommendations?topic=' + interest, function(e, recommendation) {
         recommendations.push(recommendation);
         if (recommendations.length == interests.length) {
           render(profile, interests, recommendations);
@@ -86,15 +86,16 @@ recommendations, and then when we get all the recommendations we render the page
 you can be proud of, though it's definitely getting hairy. But promises will make it all better!
 Right?
 
-Let's assume that we have a new version of fetch that returns a promise and resolves it with the
-response body.
+Let's change our fetchJson() to return a promise instead of accepting a callback. The promise
+resolves with the response body, parsed as JSON.
+
 ```javascript
-fetch('/api/user/self')
+fetchJson('/api/user/self')
     .then(function (user) {
-        return fetch('/api/user/interests?userId=' + self.id);
+        return fetchJson('/api/user/interests?userId=' + self.id);
     })
     .then(function (interests) {
-        return Promise.all[interests.map(i => fetch('/api/recommendations?topic=' + i))];
+        return Promise.all[interests.map(i => fetchJson('/api/recommendations?topic=' + i))];
     })
     .then(function (recommendations) {
         render(user, interests, recommendations);
@@ -109,16 +110,16 @@ We don't have access to profile or interests in the last function in the chain!?
 What can we do? Well, we can nest promises:
 
 ```javascript
-fetch('/api/user/self')
+fetchJson('/api/user/self')
     .then(function (user) {
-      return fetch('/api/user/interests?userId=' + self.id)
+      return fetchJson('/api/user/interests?userId=' + self.id)
           .then(interests => {
             user: user,
             interests: interests
           });
     })
     .then(function (blob) {
-      return Promise.all[blob.interests.map(i => fetch('/api/recommendations?topic=' + i))]
+      return Promise.all[blob.interests.map(i => fetchJson('/api/recommendations?topic=' + i))]
           .then(recommendations => {
             user: blob.user,
             interests: blob.interests,
@@ -139,16 +140,16 @@ So we can actually make this a bit prettier by leveraging closures:
 // We declare these variables we want to save ahead of time.
 var user, recommendations;
 
-fetch('/api/user/self')
+fetchJson('/api/user/self')
     .then(function (fetchedUser) {
       user = fetchedUser;
 
-      return fetch('/api/user/interests?userId=' + self.id);
+      return fetchJson('/api/user/interests?userId=' + self.id);
     })
     .then(function (fetchedInterests) {
       interests = fetchedInterests;
 
-      return Promise.all(interests.map(i => fetch('/api/recommendations?topic=' + i)));
+      return Promise.all(interests.map(i => fetchJson('/api/recommendations?topic=' + i)));
     })
     .then(function (recomendations) {
       render(user, interests, recommendations);
@@ -176,10 +177,10 @@ Really. Believe me. Just look:
 
 ```javascript
 co(function* () {
-  var user = yield fetch('/api/user/self');
-  var interests = yield fetch('/api/user/interests?userId=' + self.id);
+  var user = yield fetchJson('/api/user/self');
+  var interests = yield fetchJson('/api/user/interests?userId=' + self.id);
   var recommendations = yield Promise.all(
-      interests.map(i => fetch('/api/recommendations?topic=' + i)));
+      interests.map(i => fetchJson('/api/recommendations?topic=' + i)));
   render(user, interests, recommendations);
 });
 ```
@@ -692,10 +693,10 @@ function so it's no longer a generator.
 
 ```javascript
 co(function* () {
-  var user = yield fetch('/api/user/self');
-  var interests = yield fetch('/api/user/interests?userId=' + self.id);
+  var user = yield fetchJson('/api/user/self');
+  var interests = yield fetchJson('/api/user/interests?userId=' + self.id);
   var recommendations = yield Promise.all(
-      interests.map(i => fetch('/api/recommendations?topic=' + i)));
+      interests.map(i => fetchJson('/api/recommendations?topic=' + i)));
   render(user, interests, recommendations);
 });
 ```
@@ -704,10 +705,10 @@ Becomes:
 
 ```javascript
 async function () {
-  var user = await fetch('/api/user/self');
-  var interests = await fetch('/api/user/interests?userId=' + self.id);
+  var user = await fetchJson('/api/user/self');
+  var interests = await fetchJson('/api/user/interests?userId=' + self.id);
   var recommendations = await Promise.all(
-      interests.map(i => fetch('/api/recommendations?topic=' + i)));
+      interests.map(i => fetchJson('/api/recommendations?topic=' + i)));
   render(user, interests, recommendations);
 }();
 ```
